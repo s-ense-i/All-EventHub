@@ -6,6 +6,7 @@ import { getEventCategory, getEventDate, getEventPrice, getEventImageUrl } from 
 export default function EventCard({ event, isSoldOut, isBooked = false }) {
   const { user } = useContext(AuthContext);
   const isAdmin = user?.applyAs === 'Admin';
+  const eventId = event?.eventId ?? event?.id;
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
@@ -16,8 +17,10 @@ export default function EventCard({ event, isSoldOut, isBooked = false }) {
     });
   };
 
+  const linkState = event?.bookedPurchase ? { bookedPurchase: event.bookedPurchase } : undefined;
+
   return (
-    <Link to={`/events/${event.id}`} style={{ textDecoration: 'none' }}>
+    <Link to={`/events/${eventId}`} state={linkState} style={{ textDecoration: 'none' }}>
       <div className={`event-card ${isSoldOut ? 'sold-out' : ''}`}>
         {/* Image Container */}
         <div style={{ position: 'relative', overflow: 'hidden' }}>

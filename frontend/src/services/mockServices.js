@@ -311,11 +311,24 @@ export const categoryService = {
 // MOCK FAVORITE SERVICE
 // ============================================
 export const favoriteService = {
-  async addFavorite(favoriteData) {
+  async addFavorite(favoriteDataOrEventId) {
     await delay(300);
+    // Handle both object {eventId} and raw eventId string/number
+    const favoriteData = typeof favoriteDataOrEventId === 'object'
+      ? favoriteDataOrEventId
+      : { eventId: favoriteDataOrEventId };
+    const eventId = favoriteData.eventId;
+    const userId = favoriteData.userId || 1; // default user for mock
+    const existing = mockFavorites.find(
+      (f) => f.userId === userId && f.eventId === parseInt(eventId)
+    );
+    if (existing) {
+      throw { status: 409, data: { message: 'Event already in favorites' } };
+    }
     const newFavorite = {
       id: Math.max(...mockFavorites.map((f) => f.id), 0) + 1,
-      ...favoriteData,
+      userId,
+      eventId: parseInt(eventId),
       addedAt: new Date().toISOString(),
     };
     mockFavorites.push(newFavorite);

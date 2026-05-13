@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/Header';
@@ -14,6 +14,7 @@ import { getEventAvailableTickets, getEventCategory, getEventDate, getEventImage
 export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useContext(AuthContext);
   const { showToast } = useContext(NotificationContext);
@@ -25,7 +26,7 @@ export default function EventDetail() {
   const [bookingSuccess, setBookingSuccess] = useState('');
   const [showBookingDetailsModal, setShowBookingDetailsModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [bookedPurchase, setBookedPurchase] = useState(null);
+  const [bookedPurchase, setBookedPurchase] = useState(location.state?.bookedPurchase || null);
 
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
@@ -37,19 +38,28 @@ export default function EventDetail() {
 
   const { data: favoriteRecords = [], isLoading: favoritesLoading } = useQuery({
     queryKey: ['user-favorites', user?.id],
-    queryFn: () => favoriteService.getUserFavorites(user.id),
-    select: (response) => response.data || [],
+    queryFn: async () => {
+      const response = await favoriteService.getUserFavorites(user.id);
+      return Array.isArray(response) ? response : (response?.data || []);
+    },
     enabled: isAuthenticated && !!user?.id,
   });
+  const favoriteList = Array.isArray(favoriteRecords) ? favoriteRecords : [];
 
   const {
     tickets: participantTickets = [],
     isLoading: ticketsLoading,
     refetch: refetchParticipantTickets,
   } = useParticipantTickets(user?.id, isAuthenticated);
-  const purchase = bookedPurchase || participantTickets.find((ticket) => String(ticket.eventId) === String(id)) || null;
+  const purchase = bookedPurchase || participantTickets.find((ticket) => String(ticket.eventId) === String(id)) || location.state?.bookedPurchase || null;
   const hasPurchased = Boolean(purchase);
   const purchaseLoading = ticketsLoading;
+
+  useEffect(() => {
+    if (location.state?.bookedPurchase) {
+      setBookedPurchase(location.state.bookedPurchase);
+    }
+  }, [id, location.state]);
 
   const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ['event', id],
@@ -57,7 +67,7 @@ export default function EventDetail() {
     select: (response) => response.data,
   });
 
-  const currentFavorite = favoriteRecords.find((favorite) => String(favorite.eventId) === String(id));
+  const currentFavorite = favoriteList.find((favorite) => String(favorite.eventId) === String(id));
   const isFavorited = Boolean(currentFavorite);
 
   const favoriteMutation = useMutation({
@@ -96,7 +106,7 @@ export default function EventDetail() {
     }
   }, [isAuthenticated, user?.id]);
 
-  
+
 
   const handleBookTicket = async () => {
     if (!isAuthenticated) {
@@ -301,7 +311,7 @@ export default function EventDetail() {
 
   const eventDate = new Date(getEventDate(event));
   const formattedDate = eventDate.toLocaleDateString('en-US', {
-    year: 'numeric' 
+    year: 'numeric'
   });
   const formattedTime = eventDate.toLocaleTimeString('en-US', {
     hour: '2-digit',
@@ -573,7 +583,7 @@ export default function EventDetail() {
 
       {/* Main Content */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-        
+
         {/* Two Column Layout: Main Content + Sidebar */}
         <div style={{
           display: 'grid',
@@ -581,7 +591,7 @@ export default function EventDetail() {
           gap: '2rem',
           alignItems: 'start',
         }}>
-          
+
           {/* Left Column: About & Venue */}
           <div>
             {/* About Event Section */}
@@ -624,7 +634,7 @@ export default function EventDetail() {
               }}>
                 Venue
               </h2>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', color: '#1a1a2e', margin: '0 0 0.5rem 0', fontWeight: '600' }}>
@@ -645,14 +655,14 @@ export default function EventDetail() {
                       borderRadius: '8px',
                       transition: 'all 0.3s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#E63946';
-                      e.target.style.color = '#ffffff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = '#E63946';
-                    }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#E63946';
+                        e.target.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = '#E63946';
+                      }}
                     >
                       Venue Profile
                     </a>
@@ -666,14 +676,14 @@ export default function EventDetail() {
                       borderRadius: '8px',
                       transition: 'all 0.3s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#E63946';
-                      e.target.style.color = '#ffffff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = '#E63946';
-                    }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#E63946';
+                        e.target.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = '#E63946';
+                      }}
                     >
                       Get Directions
                     </a>
@@ -684,9 +694,9 @@ export default function EventDetail() {
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     {facilities.map((facility, idx) => (
-                      <div key={idx} style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                      <div key={idx} style={{
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: '0.5rem',
                         padding: '0.5rem 0.75rem',
                         backgroundColor: '#f8f8f8',
@@ -722,18 +732,18 @@ export default function EventDetail() {
           <div style={{ position: 'sticky', top: '1.5rem', alignSelf: 'start', transform: 'translateZ(0)', willChange: 'transform', backfaceVisibility: 'hidden' }}>
             <div style={{ position: 'relative' }}>
               <div style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  border: '2px solid #E63946',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  filter: hasPurchased ? 'blur(4px)' : 'none',
-                  opacity: hasPurchased ? 0.6 : 1,
-                  pointerEvents: hasPurchased || isAdmin ? 'none' : 'auto',
-                  transition: 'filter 0.35s ease, opacity 0.35s ease'
-                }}>
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                padding: '1.5rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                border: '2px solid #E63946',
+                position: 'relative',
+                overflow: 'hidden',
+                filter: hasPurchased ? 'blur(4px)' : 'none',
+                opacity: hasPurchased ? 0.6 : 1,
+                pointerEvents: hasPurchased || isAdmin ? 'none' : 'auto',
+                transition: 'filter 0.35s ease, opacity 0.35s ease'
+              }}>
                 <h2 style={{
                   fontFamily: "'Lobster Two', cursive",
                   fontSize: '1.5rem',
@@ -759,15 +769,15 @@ export default function EventDetail() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                        <span style={{ 
-                          fontWeight: '700', 
+                        <span style={{
+                          fontWeight: '700',
                           color: selectedTicket === idx ? '#E63946' : '#1a1a2e',
                           fontSize: '1.1rem',
                         }}>
                           {tier.name}
                         </span>
-                        <span style={{ 
-                          fontWeight: '700', 
+                        <span style={{
+                          fontWeight: '700',
                           color: '#E63946',
                           fontSize: '1.25rem',
                         }}>
@@ -786,17 +796,17 @@ export default function EventDetail() {
 
                 {!isAdmin && (
                   <button
-                      onClick={() => {
-                          if (purchaseLoading) return;
-                          if (hasPurchased) return;
-                          if (selectedTicket === null) return;
-                          if (!isAuthenticated) {
-                            navigate('/login');
-                            return;
-                          }
-                          setShowBookingModal(true);
-                        }}
-                        disabled={selectedTicket === null || hasPurchased || purchaseLoading}
+                    onClick={() => {
+                      if (purchaseLoading) return;
+                      if (hasPurchased) return;
+                      if (selectedTicket === null) return;
+                      if (!isAuthenticated) {
+                        navigate('/login');
+                        return;
+                      }
+                      setShowBookingModal(true);
+                    }}
+                    disabled={selectedTicket === null || hasPurchased || purchaseLoading}
                     style={{
                       width: '100%',
                       padding: '1rem',
@@ -875,7 +885,7 @@ export default function EventDetail() {
             </div>
 
             {hasPurchased && !isAdmin && (
-              <button 
+              <button
                 onClick={() => setShowReviewModal(true)}
                 style={{
                   width: '100%',
@@ -926,7 +936,7 @@ export default function EventDetail() {
           zIndex: 1000,
           padding: '1rem',
         }}
-        onClick={() => !bookingLoading && setShowBookingModal(false)}>
+          onClick={() => !bookingLoading && setShowBookingModal(false)}>
           <div
             style={{
               backgroundColor: '#ffffff',
@@ -1228,7 +1238,7 @@ export default function EventDetail() {
               </h2>
               <button onClick={() => setShowReviewModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#999' }}>✕</button>
             </div>
-            
+
             {reviewSuccess && (
               <div style={{ padding: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '8px', marginBottom: '1rem' }}>
                 {reviewSuccess}
@@ -1239,7 +1249,7 @@ export default function EventDetail() {
                 {reviewError}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmitReview}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333' }}>Rating</label>

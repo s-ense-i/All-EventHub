@@ -6,9 +6,11 @@ import EventGrid from '../../components/EventGrid';
 import { AuthContext } from '../../context/AuthContext';
 import { eventService } from '../../services/eventService';
 import { favoriteService } from '../../services/favoriteService';
+import { useParticipantTickets } from '../../hooks/useParticipantTickets';
 
-function normalizeFavoriteEvent(favorite, approvedEvents) {
+function normalizeFavoriteEvent(favorite, approvedEvents, participantTickets) {
   const fallbackEvent = approvedEvents.find((event) => String(event.id) === String(favorite.eventId ?? favorite.id));
+  const bookedPurchase = participantTickets.find((ticket) => String(ticket.eventId) === String(favorite.eventId ?? favorite.id)) || null;
   const source = fallbackEvent || favorite;
 
   return {
@@ -28,6 +30,7 @@ function normalizeFavoriteEvent(favorite, approvedEvents) {
     price: fallbackEvent?.price ?? favorite.price ?? fallbackEvent?.ticketPrice ?? favorite.ticketPrice,
     availableTickets: fallbackEvent?.availableTickets ?? favorite.availableTickets ?? 0,
     totalTickets: fallbackEvent?.totalTickets ?? favorite.totalTickets ?? 0,
+    bookedPurchase,
   };
 }
 
@@ -47,7 +50,9 @@ export default function Favorites() {
     enabled: isAuthenticated && !!user?.id,
   });
 
-  const favoriteEvents = favoriteRecords.map((favorite) => normalizeFavoriteEvent(favorite, approvedEvents));
+  const { tickets: participantTickets = [] } = useParticipantTickets(user?.id, isAuthenticated);
+
+  const favoriteEvents = favoriteRecords.map((favorite) => normalizeFavoriteEvent(favorite, approvedEvents, participantTickets));
   const isLoading = eventsLoading || favoritesLoading;
 
   return (
@@ -160,7 +165,12 @@ export default function Favorites() {
             </div>
           </div>
         ) : favoriteEvents.length > 0 ? (
-          <EventGrid events={favoriteEvents} isLoading={false} isEmpty={false} />
+          <EventGrid
+            events={favoriteEvents}
+            isLoading={false}
+            isEmpty={false}
+            bookedEventIds={new Set(participantTickets.map((ticket) => String(ticket.eventId)))}
+          />
         ) : (
           <div style={{
             backgroundColor: '#ffffff',

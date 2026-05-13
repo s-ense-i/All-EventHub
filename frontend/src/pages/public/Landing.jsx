@@ -225,7 +225,7 @@ export default function Landing() {
               justifyContent: 'center',
               animation: 'slideIn 0.6s ease-out',
             }}
-            key={`details-${currentEvent.id || 'featured-event'}`}
+              key={`details-${currentEvent.id || 'featured-event'}`}
             >
               <span style={{ color: '#E63946', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                 {getEventCategory(currentEvent)}
@@ -501,33 +501,9 @@ export default function Landing() {
           <h2 style={{ fontFamily: "'Lobster Two', cursive", fontSize: '2.5rem', color: '#ffffff', marginBottom: '1rem' }}>
             Ready to Host Your Event?
           </h2>
-          <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '2rem' }}>
+          <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0' }}>
             Join thousands of organizers who are using EventsHub to reach millions of potential attendees.
           </p>
-          <Link
-            to="/register"
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#E63946',
-              color: '#ffffff',
-              padding: '0.875rem 2rem',
-              borderRadius: '8px',
-              fontWeight: '600',
-              textDecoration: 'none',
-              transition: 'all 0.3s',
-              fontSize: '1rem',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#c92a37';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#E63946';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            Create Your First Event
-          </Link>
         </div>
       </section>
 

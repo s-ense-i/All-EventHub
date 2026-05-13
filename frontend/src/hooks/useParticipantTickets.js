@@ -5,8 +5,10 @@ import { ticketService } from '../services/ticketService';
 export function useParticipantTickets(userId, enabled = true) {
   const ticketsQuery = useQuery({
     queryKey: ['participant-tickets', userId],
-    queryFn: () => ticketService.getParticipantTickets(userId),
-    select: (response) => response.data || [],
+    queryFn: async () => {
+      const response = await ticketService.getParticipantTickets(userId);
+      return Array.isArray(response) ? response : (response?.data || []);
+    },
     enabled: enabled && !!userId,
   });
 

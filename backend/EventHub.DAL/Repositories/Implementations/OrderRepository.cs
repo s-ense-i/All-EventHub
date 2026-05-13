@@ -21,6 +21,9 @@ namespace EventHub.DAL.Repositories.Implementations
             await _dbSet
                 .Where(o => o.ParticipantId == participantId)
                 .Include(o => o.Event)
+                    .ThenInclude(e => e.Category)
+                .Include(o => o.Event)
+                    .ThenInclude(e => e.Organizer)
                 .Include(o => o.Tickets)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();
