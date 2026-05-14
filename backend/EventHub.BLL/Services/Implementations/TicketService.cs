@@ -184,6 +184,36 @@ namespace EventHub.BLL.Services.Implementations
             return await _unitOfWork.Tickets.HasParticipantPurchasedAsync(participantId, eventId);
         }
 
+        public async Task<TicketLookupDto?> GetTicketLookupByQrCodeAsync(string qrCode)
+        {
+            if (string.IsNullOrWhiteSpace(qrCode))
+                return null;
+
+            var ticket = await _unitOfWork.Tickets.GetByQrCodeWithDetailsAsync(qrCode.Trim());
+            if (ticket == null)
+                return null;
+
+            var participant = ticket.Participant;
+            return new TicketLookupDto
+            {
+                TicketId = ticket.Id,
+                QrCode = ticket.QrCode,
+                EventId = ticket.EventId,
+                EventTitle = ticket.Event?.Title ?? string.Empty,
+                EventDate = ticket.Event?.EventDate ?? default,
+                Venue = ticket.Event?.Venue ?? string.Empty,
+                ParticipantId = ticket.ParticipantId,
+                ParticipantFullName = participant == null
+                    ? string.Empty
+                    : $"{participant.FirstName} {participant.LastName}".Trim(),
+                ParticipantEmail = participant?.Email ?? string.Empty,
+                ParticipantPhoneNumber = participant?.PhoneNumber,
+                PurchasedAt = ticket.PurchasedAt,
+                IsUsed = ticket.UsedAtUtc.HasValue,
+                UsedAtUtc = ticket.UsedAtUtc
+            };
+        }
+
         public async Task<TicketVerifyOutcome> VerifyTicketByQrCodeAsync(string qrCode, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(qrCode))

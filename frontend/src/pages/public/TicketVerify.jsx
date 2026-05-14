@@ -11,19 +11,17 @@ export default function TicketVerify() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const verifyTicket = async () => {
+    const loadTicketDetails = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await ticketService.verifyTicketByQrCode(qrCode);
+        const response = await ticketService.getTicketLookupByQRCode(qrCode);
         setVerification(response?.data || response);
       } catch (err) {
-        console.error('Verification error:', err);
-        let errorMsg = 'Failed to verify ticket. QR code may be invalid or the ticket may have been used.';
-        
-        if (err.response?.status === 400) {
-          errorMsg = 'This ticket has already been used or is invalid.';
-        } else if (err.response?.status === 404) {
+        console.error('Ticket lookup error:', err);
+        let errorMsg = 'Failed to load ticket details. QR code may be invalid.';
+
+        if (err.response?.status === 404) {
           errorMsg = 'Ticket not found. This QR code may be expired or invalid.';
         } else if (err.message) {
           errorMsg = err.message;
@@ -36,7 +34,7 @@ export default function TicketVerify() {
     };
 
     if (qrCode) {
-      verifyTicket();
+      loadTicketDetails();
     }
   }, [qrCode]);
 
@@ -101,7 +99,18 @@ export default function TicketVerify() {
     );
   }
 
-  const { ticketId, eventTitle, eventDate, venue, participantFullName, participantEmail, participantPhoneNumber, purchasedAt, verifiedAtUtc } = verification;
+  const {
+    ticketId,
+    eventTitle,
+    eventDate,
+    venue,
+    participantFullName,
+    participantEmail,
+    participantPhoneNumber,
+    purchasedAt,
+    isUsed,
+    usedAtUtc,
+  } = verification;
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -117,7 +126,10 @@ export default function TicketVerify() {
     <div className="verify-container">
       <div className="verify-card success">
         <div className="success-icon">✓</div>
-        <h1>Ticket Verified</h1>
+        <h1>Ticket Details</h1>
+        <p style={{ marginTop: '-0.5rem', color: '#4b5563' }}>
+          {isUsed ? 'This ticket has already been redeemed.' : 'This ticket is valid and ready to view.'}
+        </p>
         
         <div className="ticket-details">
           <div className="detail-section">
@@ -163,8 +175,8 @@ export default function TicketVerify() {
               <span className="value">{formatDate(purchasedAt)}</span>
             </div>
             <div className="detail-row">
-              <span className="label">Verified:</span>
-              <span className="value">{formatDate(verifiedAtUtc)}</span>
+              <span className="label">Status:</span>
+              <span className="value">{isUsed ? `Redeemed${usedAtUtc ? ` on ${formatDate(usedAtUtc)}` : ''}` : 'Not redeemed'}</span>
             </div>
           </div>
         </div>

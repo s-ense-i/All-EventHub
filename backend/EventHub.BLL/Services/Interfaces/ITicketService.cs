@@ -14,6 +14,7 @@ namespace EventHub.BLL.Services.Interfaces
         Task<IEnumerable<BookedTicketDto>> GetBookedTicketsByParticipantAsync(string participantId);
         Task<IEnumerable<Ticket>> GetTicketsByEventAsync(string eventId);
         Task<bool> HasParticipantPurchasedAsync(string participantId, string eventId);
+        Task<TicketLookupDto?> GetTicketLookupByQrCodeAsync(string qrCode);
 
         Task<TicketPurchaseResult> PurchaseTicketAsync(string eventId, string participantId);
 

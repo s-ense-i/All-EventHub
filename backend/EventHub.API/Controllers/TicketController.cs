@@ -53,6 +53,17 @@ namespace EventHub.API.Controllers
             };
         }
 
+        [HttpGet("lookup/{qrCode}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LookupByQrCode(string qrCode)
+        {
+            var details = await _ticketService.GetTicketLookupByQrCodeAsync(qrCode);
+            if (details == null)
+                return NotFound(new { message = "Ticket not found or invalid QR code." });
+
+            return Ok(details);
+        }
+
         [HttpGet("{id}/qr-image")]
         public async Task<IActionResult> GetQrCodeImage(string id)
         {

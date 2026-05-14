@@ -23,6 +23,23 @@ namespace EventHub.BLL.Models
         public DateTime VerifiedAtUtc { get; set; }
     }
 
+    public sealed class TicketLookupDto
+    {
+        public string TicketId { get; set; } = string.Empty;
+        public string QrCode { get; set; } = string.Empty;
+        public string EventId { get; set; } = string.Empty;
+        public string EventTitle { get; set; } = string.Empty;
+        public DateTime EventDate { get; set; }
+        public string Venue { get; set; } = string.Empty;
+        public string ParticipantId { get; set; } = string.Empty;
+        public string ParticipantFullName { get; set; } = string.Empty;
+        public string ParticipantEmail { get; set; } = string.Empty;
+        public string? ParticipantPhoneNumber { get; set; }
+        public DateTime PurchasedAt { get; set; }
+        public bool IsUsed { get; set; }
+        public DateTime? UsedAtUtc { get; set; }
+    }
+
     public sealed class TicketVerifyOutcome
     {
         public TicketVerifyOutcomeKind Kind { get; init; }

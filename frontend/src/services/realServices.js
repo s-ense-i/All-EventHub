@@ -136,6 +136,11 @@ export const ticketService = {
       .get(`/api/ticket/qrcode/${qrCode}`)
       .then((res) => ({ data: res.data })),
 
+  getTicketLookupByQRCode: (qrCode) =>
+    api
+      .get(`/api/ticket/lookup/${qrCode}`)
+      .then((res) => ({ data: res.data })),
+
   verifyTicketByQrCode: (qrCode) =>
     api
       .get(`/api/ticket/verify/${qrCode}`)
