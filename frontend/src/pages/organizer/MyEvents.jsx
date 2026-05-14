@@ -24,6 +24,7 @@ export default function MyEvents() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const pendingBannerTitle = location.state?.eventTitle || 'Your event';
   const showPendingBanner = Boolean(location.state?.justCreatedPendingEvent);
@@ -82,14 +83,14 @@ export default function MyEvents() {
     return counts;
   }, [organizerEvents]);
 
-  const handleDelete = async (eventId, title) => {
-    const confirmed = window.confirm(`Delete \"${title}\"? This action cannot be undone.`);
-    if (!confirmed) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
     setError('');
 
     try {
-      await deleteMutation.mutateAsync(eventId);
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      setDeleteTarget(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete event.');
     }
@@ -183,7 +184,7 @@ export default function MyEvents() {
                       <button onClick={() => navigate(`/events/${event.id}`)} style={{ padding: '0.45rem 0.75rem', borderRadius: '8px', border: '1px solid #ddd', backgroundColor: '#fff', fontWeight: '700', cursor: 'pointer' }}>View</button>
                       <button onClick={() => navigate(`/edit-event/${event.id}`)} style={{ padding: '0.45rem 0.75rem', borderRadius: '8px', border: '1px solid #ddd', backgroundColor: '#fff', fontWeight: '700', cursor: 'pointer' }}>Edit</button>
                       <button
-                        onClick={() => handleDelete(event.id, event.title)}
+                        onClick={() => setDeleteTarget({ id: event.id, title: event.title })}
                         disabled={deleteMutation.isPending}
                         style={{ padding: '0.45rem 0.75rem', borderRadius: '8px', border: 'none', backgroundColor: '#b42318', color: '#fff', fontWeight: '700', cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer', opacity: deleteMutation.isPending ? 0.7 : 1 }}
                       >
@@ -197,6 +198,84 @@ export default function MyEvents() {
           </div>
         )}
       </div>
+
+      {deleteTarget && (
+        <div
+          onClick={() => !deleteMutation.isPending && setDeleteTarget(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              backgroundColor: '#fff',
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: '0 20px 60px rgba(15, 23, 42, 0.28)',
+              border: '1px solid #f1f5f9',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '999px', backgroundColor: '#fee2e2', color: '#b42318', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: '800' }}>!</div>
+              <div>
+                <h3 style={{ margin: 0, color: '#1a1a2e', fontSize: '1.2rem' }}>Delete event?</h3>
+                <p style={{ margin: '0.25rem 0 0', color: '#6b7280', fontSize: '0.92rem' }}>This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px', padding: '0.9rem 1rem', marginBottom: '1.25rem', border: '1px solid #e5e7eb' }}>
+              <p style={{ margin: 0, color: '#111827', fontWeight: '700' }}>{deleteTarget.title}</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteMutation.isPending}
+                style={{
+                  flex: 1,
+                  padding: '0.8rem 1rem',
+                  borderRadius: '10px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#fff',
+                  color: '#1f2937',
+                  fontWeight: '700',
+                  cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+                style={{
+                  flex: 1,
+                  padding: '0.8rem 1rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  backgroundColor: deleteMutation.isPending ? '#fca5a5' : '#b42318',
+                  color: '#fff',
+                  fontWeight: '800',
+                  cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete Event'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

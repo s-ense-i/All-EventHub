@@ -184,9 +184,6 @@ namespace EventHub.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            if (!EventManagementAuth.IsAdmin(User) && !await HasApprovedOrganizerAccessAsync(userId))
-                return Forbid();
-
             var existing = await _eventService.GetEventByIdAsync(id);
             if (existing == null)
                 return NotFound();
@@ -229,9 +226,6 @@ namespace EventHub.API.Controllers
             var userId = EventManagementAuth.GetUserId(User);
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
-
-            if (!EventManagementAuth.IsAdmin(User) && !await HasApprovedOrganizerAccessAsync(userId))
-                return Forbid();
 
             var existing = await _eventService.GetEventByIdAsync(id);
             if (existing == null)

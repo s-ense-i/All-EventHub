@@ -84,7 +84,7 @@ export default function EditEvent() {
 	const canEdit = useMemo(() => {
 		if (!event || !user) return true;
 		if (typeof event.organizerId === 'undefined' || event.organizerId === null) return true;
-		return Number(event.organizerId) === Number(user.id);
+		return String(event.organizerId) === String(user.id);
 	}, [event, user]);
 
 	if (!isAuthenticated || user?.applyAs !== 'EventOrganizer') {
